@@ -1,8 +1,10 @@
 module Ch5 where
 
+import Prelude (Unit, discard, show)
+
+import Data.List (List(..), (:))
 import Effect (Effect)
 import Effect.Console (log)
-import Prelude (Unit, discard, show)
 
 -- flip :: ∀ a b c. (a -> b -> c) -> b -> a -> c
 -- flip f x y = f y x
