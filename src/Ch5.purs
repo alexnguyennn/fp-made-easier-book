@@ -143,6 +143,24 @@ reverse l =  go l Nil where
     go Nil rl = rl
     go (x : xs) rl = go xs (x : rl)
 
+
+{-
+    todo: writing on derived
+    todo: explain formative case
+        concat (lh : (lsh : Nil)) = go lh lsh where
+            go Nil listToConcat  = listToConcat
+            go (x : xs) listToConcat = x : (go xs listToConcat)
+-}
+concat :: ∀ a. List (List a) -> List a
+concat Nil = Nil
+concat (l : ls) = go l (concat ls) where 
+    go Nil listToConcat  = listToConcat
+    go (x : xs) listToConcat = x : (go xs listToConcat)
+
+{-
+    todo: implement alternative concat implementation from book
+-}
+
 test:: Effect Unit
 test = do
     log $ show $ flip const 1 2
@@ -176,3 +194,6 @@ test = do
     log $ show $ findLastIndex (_ == 10) (10 : 5 : 10 : -1 : 2 : 10 : Nil) 
     log $ show $ findLastIndex (_ == 10) (11 : 12 : Nil)
     log $ show $ reverse (10 : 20 : 30 : Nil)
+    log $ show $ concat ((1 : 2 : 3 : Nil) : (4 : 5 : Nil) : (6 : Nil) : (Nil) : Nil)
+    -- log $ show $ filter (4 > _) $ (1 : 2 : 3 : 4 : 5 : 6 : Nil) 
+
