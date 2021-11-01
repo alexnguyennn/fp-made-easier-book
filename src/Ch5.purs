@@ -152,14 +152,21 @@ reverse l =  go l Nil where
             go (x : xs) listToConcat = x : (go xs listToConcat)
 -}
 concat :: ∀ a. List (List a) -> List a
-concat Nil = Nil
-concat (l : ls) = go l (concat ls) where 
-    go Nil listToConcat  = listToConcat
-    go (x : xs) listToConcat = x : (go xs listToConcat)
+-- concat Nil = Nil
+-- concat (l : ls) = go l (concat ls) where 
+--     go Nil listToConcat  = listToConcat
+--     go (x : xs) listToConcat = x : (go xs listToConcat)
 
 {-
     todo: implement alternative concat implementation from book
 -}
+concat Nil = Nil
+concat (Nil : xss) = concat xss
+concat ((x : xs) : xss) = x : concat (xs : xss)
+
+filter :: ∀ a. (a -> Boolean) -> List a -> List a
+filter _ Nil = Nil
+filter f (x : xs) = if f x then x : filter f xs else filter f xs
 
 test:: Effect Unit
 test = do
@@ -195,5 +202,5 @@ test = do
     log $ show $ findLastIndex (_ == 10) (11 : 12 : Nil)
     log $ show $ reverse (10 : 20 : 30 : Nil)
     log $ show $ concat ((1 : 2 : 3 : Nil) : (4 : 5 : Nil) : (6 : Nil) : (Nil) : Nil)
-    -- log $ show $ filter (4 > _) $ (1 : 2 : 3 : 4 : 5 : 6 : Nil) 
+    log $ show $ filter (4 > _) $ (1 : 2 : 3 : 4 : 5 : 6 : Nil) 
 
