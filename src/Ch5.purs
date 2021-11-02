@@ -5,7 +5,7 @@ import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Console (log)
-import Prelude (type (~>), Unit, discard, negate, show, (+), (/=), (<), (==), (>), (>=))
+import Prelude (type (~>), Unit, discard, negate, otherwise, show, (+), (/=), (<), (<<<), (==), (>), (>=))
 
 -- import Data.List (singleton)
 
@@ -137,6 +137,8 @@ findLastIndex pred l = go l 0 Nothing where
     learning:
     * using separate data structure in fp means inject it as input (kinda like di)
     * hard to initialise DS during recursion
+
+    tail recursive implementation; only does recursing, no other calls
 -}
 reverse :: List ~> List 
 reverse l =  go l Nil where
@@ -145,8 +147,9 @@ reverse l =  go l Nil where
 
 
 {-
-    todo: writing on derived
-    todo: explain formative case
+    own solution: design helper function that concatted between 2 lists first,
+    hence the (lh: (lsh : Nil)) case below.
+    then recurse through list of lists (ls) normally and call go on it with rest of list each time instead
         concat (lh : (lsh : Nil)) = go lh lsh where
             go Nil listToConcat  = listToConcat
             go (x : xs) listToConcat = x : (go xs listToConcat)
@@ -157,16 +160,25 @@ concat :: ∀ a. List (List a) -> List a
 --     go Nil listToConcat  = listToConcat
 --     go (x : xs) listToConcat = x : (go xs listToConcat)
 
-{-
-    todo: implement alternative concat implementation from book
--}
 concat Nil = Nil
 concat (Nil : xss) = concat xss
 concat ((x : xs) : xss) = x : concat (xs : xss)
 
 filter :: ∀ a. (a -> Boolean) -> List a -> List a
-filter _ Nil = Nil
-filter f (x : xs) = if f x then x : filter f xs else filter f xs
+-- filter f (x : xs) = if f x then x : filter f xs else filter f xs
+{-
+    alternate implementation with guards
+filter f (x : xs) | f x = x : filter f xs
+                  | otherwise = filter f xs
+-}
+-- tail recursive solution (make sure reverse is tail recursive too)
+--  slower (have to iterate through again to reverse) but takes less space on stack
+-- filter f l = reverse $ go Nil l where
+filter f = reverse <<< go Nil where
+    go nl Nil = nl
+    go nl (x : xs) | f x = go (x : nl) xs
+    go nl (_ : xs) | otherwise = go nl xs
+
 
 test:: Effect Unit
 test = do
