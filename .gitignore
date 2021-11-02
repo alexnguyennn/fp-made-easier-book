@@ -8,3 +8,5 @@
 /.purs*
 /.psa*
 /.spago
+# ignore jetbrains ide folders
+.idea 

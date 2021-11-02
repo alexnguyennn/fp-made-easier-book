@@ -1,10 +1,11 @@
 module Ch5 where
 
+import Data.Boolean (otherwise)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Console (log)
-import Prelude (Unit, discard, show, (+))
+import Prelude (Unit, discard, negate, show, (+), (/=), (<), (==), (>), (>=))
 
 -- import Data.List (singleton)
 
@@ -78,6 +79,50 @@ init l = Just $ go l where
     go (_ : Nil) = Nil
     go (x : xs) = x : go xs
 
+uncons :: ∀ a. List a -> Maybe { head :: a, tail :: List a }
+uncons Nil = Nothing
+uncons (x : xs) = Just { head: x, tail: xs }
+
+index :: ∀ a. List a -> Int -> Maybe a
+index Nil _ = Nothing
+index _ idx | idx < 0 = Nothing
+index l idx = go l idx 0 where
+    go :: List a -> Int -> Int -> Maybe a
+    go Nil _ _ = Nothing
+    go (x : xs) i j | j == i    =  Just x
+                    | j > i     =  Nothing
+                    | otherwise =  go xs i (j + 1)
+
+-- alternate impl: - start highest and recurse backward
+-- index Nil _ = Nothing
+-- index _ idx | idx < 0 = Nothing
+-- index (x : _ ) 0 = Just x -- uses 0 count to terminate
+-- index (_ : xs ) i = index xs (i - 1) 
+infixl 8 index as !!
+
+findIndex :: ∀ a. (a -> Boolean) -> List a -> Maybe Int
+findIndex pred l = go l 0 where
+    go Nil _ = Nothing
+    go (x : xs) idx = 
+        if pred x 
+        then Just idx 
+        else go xs (idx + 1)
+
+findLastIndex :: forall a. (a -> Boolean) -> List a -> Maybe Int
+-- findLastIndex pred l = go l 0 (-1) where
+    -- go Nil _ latest | latest < 0 = Nothing
+                    -- | otherwise = latest
+    -- go (x : xs) idx latest = 
+    --     if pred x 
+    --     then go xs (idx + 1) idx
+    --     else go xs (idx + 1) latest
+findLastIndex pred l = go l 0 Nothing where
+    -- note: remove ∀ from signature to prevent clobbering global a in type signature above
+    go :: List a -> Int -> Maybe Int -> Maybe Int 
+    go Nil _ latest = latest
+    go (x : xs) idx latest = 
+        go xs (idx + 1) (if pred x then Just idx else latest) 
+
 
 
 test:: Effect Unit
@@ -100,4 +145,15 @@ test = do
     log $ show $ init (1: Nil)
     log $ show $ init (1 : 2 : Nil)
     log $ show $ init (1 : 2 : 3 : Nil)
-
+    log $ show $ uncons (1 : 2 : 3 : Nil)
+    log $ show $ index (1: Nil) 4
+    log $ show $ index (1 : 2 : 3 : Nil) 1
+    log $ show $ index (Nil :: List Unit) 0
+    log $ show $ index (1 : 2 : 3 : Nil) (-99)
+    log $ show $ (1 : 2 : 3 : Nil) !! 1
+    log $ show $ findIndex (_ >= 2) (1 : 2 : 3 : Nil) 
+    log $ show $ findIndex (_ >= 99) (1 : 2 : 3 : Nil) 
+    log $ show $ findIndex (10 /= _) (Nil :: List Int) 
+    log $ show $ findLastIndex (_ == 10) (Nil :: List Int) 
+    log $ show $ findLastIndex (_ == 10) (10 : 5 : 10 : -1 : 2 : 10 : Nil) 
+    log $ show $ findLastIndex (_ == 10) (11 : 12 : Nil)
