@@ -5,7 +5,7 @@ import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Console (log)
-import Prelude (type (~>), Unit, discard, negate, otherwise, show, (+), (-), (/=), (<), (<<<), (==), (>), (>=))
+import Prelude (type (~>), Unit, discard, negate, otherwise, show, (+), (-), (/=), (<), (<<<), (==), (>), (>=), max)
 
 -- import Data.List (singleton)
 
@@ -231,14 +231,27 @@ range :: Int -> Int -> List Int
 --     go rl start' end' | start' == end' = start': rl
 --                       | otherwise = go (start': rl) (start' + step) end'
 --     step = if  start < end then 1 else (-1) 
-
--- swap start/end pos note: WIP
+-- note: also flipping step logic as it's still in terms of original start/end adn we're flipping start/end order 
+-- to account for backward recursing
 range start end = go Nil end start where 
     go rl start' end' | start' == end' = start': rl
-                      | otherwise = go (start': rl) (start' + step) end'
-    step = if  start < end then 1 else (-1) 
+                 | otherwise = go (start': rl) (start' + step) end'
+    step = if  start < end then (-1) else 1 
 
-            
+
+take :: ∀ a. Int -> List a -> List a
+-- take _ Nil = Nil
+-- take 0 _ = Nil
+-- take n (x : xs) = x : take (n - 1) xs
+
+
+-- tail recursive
+-- building list in tail recursive manner usually reverses order of final list - need to deal with this when optimising
+-- fix weakness with negative numbers where infinite recurse with max
+take n = reverse <<< go Nil (max 0 n) where
+    go nl _ Nil = nl
+    go nl 0 _ = nl
+    go nl n' (x : xs) = go (x : nl) (n' -1) xs
 
 
 test:: Effect Unit
@@ -279,6 +292,11 @@ test = do
     log $ show $ catMaybes (Just 1 : Nothing : Just 2 : Nothing : Nothing : Just 5 : Nil)
     log $ show $ range 1 10
     log $ show $ range 3 (-3)
+    log $ show $ take 5 (12 : 13 : 14 : Nil)
+    log $ show $ take 5 (-7 : 9 : 0 : 12 : -13 : 45 : 976 : -19 : Nil)
+    log $ show $ take (-5) (12 : 13 : 14 : Nil)
+
+
 
 
 
