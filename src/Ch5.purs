@@ -5,7 +5,7 @@ import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Console (log)
-import Prelude (type (~>), Unit, discard, negate, otherwise, show, (+), (/=), (<), (<<<), (==), (>), (>=))
+import Prelude (type (~>), Unit, discard, negate, otherwise, show, (+), (-), (/=), (<), (<<<), (==), (>), (>=))
 
 -- import Data.List (singleton)
 
@@ -179,6 +179,67 @@ filter f = reverse <<< go Nil where
     go nl (x : xs) | f x = go (x : nl) xs
     go nl (_ : xs) | otherwise = go nl xs
 
+catMaybes :: ∀ a. List (Maybe a) -> List a
+catMaybes Nil = Nil
+-- catMaybes ((Just val) : xs) = val : catMaybes xs
+-- catMaybes ( Nothing : xs) = catMaybes xs
+-- use case:
+catMaybes (x : xs) = case x of
+    Just y -> y : catMaybes xs
+    Nothing -> catMaybes xs
+
+range :: Int -> Int -> List Int
+-- range start end =  go start end where
+--     go :: Int -> Int -> List Int
+--     go cur end | cur == end = end : Nil
+--     go cur end | start < end = cur : go (cur + 1) end
+--     go cur end | start > end = cur : go (cur - 1) end
+
+-- book soln; don't be too eager to break out the subfunction? go had a missing case..
+-- range start end | start == end = singleton start
+--                 | otherwise = 
+--                     let step = if  start < end then 1 else (-1) in
+--                         start : range (start + step) end
+
+-- NOTE: let in this case is part of recursive call so will be recalculated every time
+-- range start end =
+--     let step = if  start < end then 1 else (-1) in
+--     if start == end 
+--     then singleton start
+--     else start : range (start + step) end 
+
+-- optimise range - do let only once
+-- NOTE: variables from in scope terminates at where - can't pass through to go
+-- range start end = 
+--     let step = if  start < end then 1 else (-1) in
+--         go start step where
+--             -- go start' step = 
+--             --     if start' == end 
+--             --     then singleton start'
+--             --     else start' : range (start' + step) end  
+--             -- or
+--             go start' step | start' == end = singleton start'
+--             go start' step | otherwise = start' : go (start' + step) end  
+
+-- range start end = go start where
+--     go start' | start' == end = singleton start'
+--     go start' | otherwise = start' : go (start' + step) end  
+--     step = if  start < end then 1 else (-1) 
+
+-- backwards
+-- range start end = go Nil start end where 
+--     go rl start' end' | start' == end' = start': rl
+--                       | otherwise = go (start': rl) (start' + step) end'
+--     step = if  start < end then 1 else (-1) 
+
+-- swap start/end pos note: WIP
+range start end = go Nil end start where 
+    go rl start' end' | start' == end' = start': rl
+                      | otherwise = go (start': rl) (start' + step) end'
+    step = if  start < end then 1 else (-1) 
+
+            
+
 
 test:: Effect Unit
 test = do
@@ -215,4 +276,9 @@ test = do
     log $ show $ reverse (10 : 20 : 30 : Nil)
     log $ show $ concat ((1 : 2 : 3 : Nil) : (4 : 5 : Nil) : (6 : Nil) : (Nil) : Nil)
     log $ show $ filter (4 > _) $ (1 : 2 : 3 : 4 : 5 : 6 : Nil) 
+    log $ show $ catMaybes (Just 1 : Nothing : Just 2 : Nothing : Nothing : Just 5 : Nil)
+    log $ show $ range 1 10
+    log $ show $ range 3 (-3)
+
+
 
