@@ -5,7 +5,7 @@ import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Console (log)
-import Prelude (type (~>), Unit, discard, negate, otherwise, show, (+), (-), (/=), (<), (<<<), (==), (>), (>=), max)
+import Prelude (type (~>), Unit, discard, max, negate, otherwise, show, (+), (-), (/=), (<), (<<<), (<=), (==), (>), (>=))
 
 -- import Data.List (singleton)
 
@@ -254,6 +254,34 @@ take n = reverse <<< go Nil (max 0 n) where
     go nl n' (x : xs) = go (x : nl) (n' -1) xs
 
 
+drop :: ∀ a. Int -> List a -> List a
+drop n l = go (max 0 n) l where
+    go _ Nil = Nil
+    go 0 l' = l'
+    go n' (_ : xs) = go (n' -1) xs
+
+takeWhile :: ∀ a. (a -> Boolean) -> List a -> List a
+takeWhile _ Nil = Nil
+takeWhile pred (x : xs) | pred x = x : takeWhile pred xs
+takeWhile _ _ | otherwise = Nil
+
+dropWhile :: ∀ a. (a -> Boolean) -> List a -> List a
+dropWhile _ Nil = Nil
+dropWhile pred (x : xs) | pred x = dropWhile pred xs
+dropWhile _ l | otherwise = l
+-- note: l@(x: xs) allows reference to both full list and destructure
+
+takeEnd :: ∀ a. Int -> List a -> List a 
+-- or 
+--takeEnd n l = drop (max 0 $ length l - n) l 
+takeEnd n l =  go Nil n (reverse l) where
+    go tl _ Nil = tl
+    go tl 0 _ = tl
+    go tl n' (x : xs) = go (x : tl) (n' - 1) xs
+
+-- TODO: start takeend with tuple
+
+
 test:: Effect Unit
 test = do
     log $ show $ flip const 1 2
@@ -295,8 +323,15 @@ test = do
     log $ show $ take 5 (12 : 13 : 14 : Nil)
     log $ show $ take 5 (-7 : 9 : 0 : 12 : -13 : 45 : 976 : -19 : Nil)
     log $ show $ take (-5) (12 : 13 : 14 : Nil)
-
-
-
+    log $ show $ drop 2 (1 : 2 : 3 : 4 : 5 : 6 : 7 : Nil)
+    log $ show $ drop 10 (Nil :: List Unit)
+    log $ show $ drop (-20) (1 : 2 : 3 : 4 : 5 : 6 : 7 : Nil)
+    log $ show $ takeWhile (_ > 3) (5 : 4 : 3 : 99 : 101 : Nil)
+    log $ show $ takeWhile (_ == -17) (1 : 2 : 3 : Nil)
+    log $ show $ takeWhile (_ <= 2) (1 : 2 : 3 : Nil)
+    log $ show $ dropWhile (_ > 3) (5 : 4 : 3 : 99 : 101 : Nil)
+    log $ show $ dropWhile (_ == -17) (1 : 2 : 3 : Nil) 
+    log $ show $ takeEnd 3 (1 : 2 : 3 : 4 : 5 : 6 : Nil)
+    log $ show $ takeEnd 10 (1 : Nil)
 
 
