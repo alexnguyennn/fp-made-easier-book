@@ -5,7 +5,7 @@ import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Console (log)
-import Prelude (Unit, discard, negate, show, (+), (/=), (<), (==), (>), (>=))
+import Prelude (type (~>), Unit, discard, negate, show, (+), (/=), (<), (==), (>), (>=))
 
 -- import Data.List (singleton)
 
@@ -124,6 +124,24 @@ findLastIndex pred l = go l 0 Nothing where
         go xs (idx + 1) (if pred x then Just idx else latest) 
 
 
+{- 
+    ~> is natural transformation (something to do with functors)
+    -- equivalent to: 
+    reverse :: ∀ a. List a -> List a
+    -- ~> is a type operator; binary operator on types, not values
+    implementation strategy:
+    * create new list -> nil stub as input
+    * iterate through, add to new list as we go
+    * nil case - return new list
+
+    learning:
+    * using separate data structure in fp means inject it as input (kinda like di)
+    * hard to initialise DS during recursion
+-}
+reverse :: List ~> List 
+reverse l =  go l Nil where
+    go Nil rl = rl
+    go (x : xs) rl = go xs (x : rl)
 
 test:: Effect Unit
 test = do
@@ -157,3 +175,4 @@ test = do
     log $ show $ findLastIndex (_ == 10) (Nil :: List Int) 
     log $ show $ findLastIndex (_ == 10) (10 : 5 : 10 : -1 : 2 : 10 : Nil) 
     log $ show $ findLastIndex (_ == 10) (11 : 12 : Nil)
+    log $ show $ reverse (10 : 20 : 30 : Nil)
