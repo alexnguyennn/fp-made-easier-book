@@ -3,6 +3,7 @@ module Ch5 where
 import Data.Boolean (otherwise)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..), fst, snd)
 import Effect (Effect)
 import Effect.Console (log)
 import Prelude (type (~>), Unit, discard, max, negate, otherwise, show, (+), (-), (/=), (<), (<<<), (<=), (==), (>), (>=))
@@ -272,14 +273,45 @@ dropWhile _ l | otherwise = l
 -- note: l@(x: xs) allows reference to both full list and destructure
 
 takeEnd :: ∀ a. Int -> List a -> List a 
--- or 
+-- or this implementation (but double traversal)
 --takeEnd n l = drop (max 0 $ length l - n) l 
-takeEnd n l =  go Nil n (reverse l) where
-    go tl _ Nil = tl
-    go tl 0 _ = tl
-    go tl n' (x : xs) = go (x : tl) (n' - 1) xs
+-- takeEnd n l =  go Nil n (reverse l) where
+--     go tl _ Nil = tl
+--     go tl 0 _ = tl
+--     go tl n' (x : xs) = go (x : tl) (n' - 1) xs
 
--- TODO: start takeend with tuple
+takeEnd n l = snd (go l) where
+    -- go :: Tuple Int List a -> Tuple Int List a
+    go Nil = Tuple 0 Nil
+    -- self implementation
+    -- go (x : xs) = 
+    --     let 
+    --         next = go xs
+    --         iterator = fst next
+    --         taken = snd next
+    --     in
+    --         Tuple (iterator + 1) (
+    --             if iterator < n then
+    --                 x : taken
+    --             else
+    --                 taken)
+    {-
+    -- book implementation
+    NOTE: it's cleaner because it makes use of applyFlipped
+    (#) operator; an a -> (a -> b) -> b
+    This is useful to specify some operation to generate an a
+    before doing something with it (supplying lambda a->b) - result will actually apply to yield the b
+    Pattern matching uses Type and assign param to each part
+    -}
+    -- go (x : xs) = go xs 
+    --     # \(Tuple c nl) -> 
+    --         Tuple (c + 1) $ if c < n then x : nl else nl
+    -- this implementation increments c even if not adding to nl
+    -- this is fine since value is discarded at top
+    -- alternate impl that will not incr c if not adding to nl
+    go (x : xs) = go xs 
+        # \tup@(Tuple c nl) -> 
+            if c < n then Tuple (c + 1) (x : nl) else tup
 
 
 test:: Effect Unit
