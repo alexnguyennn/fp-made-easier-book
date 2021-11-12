@@ -313,6 +313,10 @@ takeEnd n l = snd (go l) where
         # \tup@(Tuple c nl) -> 
             if c < n then Tuple (c + 1) (x : nl) else tup
 
+dropEnd :: ∀ a. Int -> List a -> List a
+dropEnd = ?todo
+
+
 
 test:: Effect Unit
 test = do
@@ -365,5 +369,9 @@ test = do
     log $ show $ dropWhile (_ == -17) (1 : 2 : 3 : Nil) 
     log $ show $ takeEnd 3 (1 : 2 : 3 : 4 : 5 : 6 : Nil)
     log $ show $ takeEnd 10 (1 : Nil)
+    log $ show $ dropEnd 3 (1 : 2 : 3 : 4 : 5 : 6 : Nil)
+    log $ show $ dropEnd 10 (1 : Nil)
+
+
 
 
