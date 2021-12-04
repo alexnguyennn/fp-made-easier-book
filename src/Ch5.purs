@@ -6,7 +6,7 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..), fst, snd)
 import Effect (Effect)
 import Effect.Console (log)
-import Prelude (type (~>), Unit, discard, max, negate, otherwise, show, (+), (-), (/=), (<), (<<<), (<=), (==), (>), (>=))
+import Prelude (type (~>), Unit, discard, max, negate, otherwise, show, (+), (-), (/=), (<), (<<<), (<=), (==), (>), (>=), (>>>))
 
 -- import Data.List (singleton)
 
@@ -28,6 +28,8 @@ apply f x = f x
 
 infixr 0 apply as $
 
+-- NOTE: in usage of applyFlipped, a is evaluated first, then the f (a-b) will apply to yield the b per func signature
+-- hence, inside the apply function we're evaluating 'on the way back up' (adding to head will yield list in same order)
 applyFlipped :: ∀ a b. a -> (a -> b) -> b
 applyFlipped = flip apply
 -- applyFlipped x f = f x
@@ -299,7 +301,7 @@ takeEnd n l = snd (go l) where
     -- book implementation
     NOTE: it's cleaner because it makes use of applyFlipped
     (#) operator; an a -> (a -> b) -> b
-    This is useful to specify some operation to generate an a
+    This is useful to specify some operation to generate a b
     before doing something with it (supplying lambda a->b) - result will actually apply to yield the b
     Pattern matching uses Type and assign param to each part
     -}
@@ -312,9 +314,17 @@ takeEnd n l = snd (go l) where
     go (x : xs) = go xs 
         # \tup@(Tuple c nl) -> 
             if c < n then Tuple (c + 1) (x : nl) else tup
+    -- NOTE: in usage of applyFlipped, a is evaluated first, then the f (a-b) will apply to yield the b per func signature
+    -- hence, inside the apply function we're evaluating 'on the way back up' (adding to head will yield list in same order)
 
 dropEnd :: ∀ a. Int -> List a -> List a
-dropEnd = ?todo
+dropEnd nToDrop l = snd (go l) where
+-- dropEnd nToDrop = snd >>> go where -- can use this if return values to go are same as snd of the tuple (a list a)
+-- this would happen if we incremented c in either case (but here we actually stop once we're done dropping elements)
+    go Nil = Tuple 0 Nil
+    go (x : xs) = go xs 
+        # \(Tuple c nl) -> 
+            if c < nToDrop then Tuple (c + 1) nl else Tuple c (x : nl)
 
 
 
