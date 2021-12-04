@@ -331,6 +331,21 @@ zip Nil _ = Nil
 zip _ Nil = Nil
 zip (x : xs) (y : ys) = Tuple x y : zip xs ys
 
+unzip :: ∀ a b. List (Tuple a b) -> Tuple (List a) (List b)
+-- first go
+-- unzip ts = go Nil Nil ts where
+--     go xs ys Nil = Tuple xs ys
+--     -- go xs ys (Tuple x y : tuples) = go (x : xs) (y : ys) tuples -- ends up backwards
+--     go xs ys (Tuple x y : tuples) = go xs ys tuples # \(Tuple curXs curYs) -> Tuple (x : curXs) (y : curYs)
+--     -- improve: use map on tuple instead?
+-- convert to cleaner without helper method via book
+-- don't need go method to init a list with applyflip - use base case to generate and provided lambda
+-- executes on the way back up
+unzip Nil = Tuple Nil Nil
+unzip (Tuple x y : ts) = unzip ts # \(Tuple xs ys) -> Tuple (x : xs) (y : ys)
+
+
+
 test:: Effect Unit
 test = do
     log $ show $ flip const 1 2
@@ -387,3 +402,9 @@ test = do
     log $ show $ zip (1 : 2 : 3 : Nil) ("a" : "b" : "c" : "d" : "e" : Nil)
     log $ show $ zip ("a" : "b" : "c" : "d" : "e" : Nil) (1 : 2 : 3 : Nil)
     log $ show $ zip (Nil :: List Unit) (1 : 2 : Nil)
+    log $ show $ unzip (Tuple 1 "a" : Tuple 2 "b" : Tuple 3 "c" : Nil)
+    log $ show $ unzip (Tuple "a" 1 : Tuple "b" 2 : Tuple "c" 3 : Nil)
+    log $ show $ unzip (Nil :: List (Tuple Unit Unit))
+
+
+
